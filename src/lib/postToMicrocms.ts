@@ -5,6 +5,13 @@ const endpoint = process.env.MICROCMS_ENDPOINT!;
 const apiKey = process.env.MICROCMS_API_KEY!;
 
 export async function postToMicrocms(item: RssItem) {
+  // const data = {
+  //   title: item.title,
+  //   body: item.contentSnippet || '',
+  //   url: item.link,
+  //   publishedAt: item.pubDate || new Date().toISOString(),
+  // };
+  // console.log('microCMSに送信するデータ:', data);
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {

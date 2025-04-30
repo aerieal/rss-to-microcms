@@ -11,6 +11,7 @@ export type RssItem = {
 export async function fetchRssItems(url: string): Promise<RssItem[]> {
   const parser = new Parser();
   const feed = await parser.parseURL(url);
+  console.log('feed', feed);
   return feed.items.map((item) => ({
     title: item.title || '',
     link: item.link || '',
