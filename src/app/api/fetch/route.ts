@@ -1,21 +1,21 @@
 // src/app/api/fetch/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { fetchRssItems } from '@/lib/fetchRss';
+
+import { fetchRss } from '@/lib/fetchRss';
 import { postToMicrocms } from '@/lib/postToMicrocms';
 
-export async function GET(req: NextRequest) {
-  const feedUrl = 'https://qiita.com/tags/react/feed'; // 好きなRSSに変更可
-  const items = await fetchRssItems(feedUrl);
+export async function GET() {
+  const grouped = await fetchRss();
 
-  const results = [];
-  for (const item of items) {
-    try {
-      const result = await postToMicrocms(item);
-      results.push(result);
-    } catch (err) {
-      console.error('投稿失敗:', err);
+  // サービスごとのRSSを投稿
+  for (const [service, items] of Object.entries(grouped)) {
+    for (const item of items) {
+      try {
+        await postToMicrocms({ ...item, service }); // ← 追加
+      } catch (e) {
+        console.error('投稿失敗:', e);
+      }
     }
   }
 
-  return NextResponse.json({ message: '完了', count: results.length });
+  return Response.json({ success: true });
 }

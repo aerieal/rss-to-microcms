@@ -1,17 +1,33 @@
-// src/lib/postToMicrocms.ts
 import { RssItem } from './fetchRss';
 
 const endpoint = process.env.MICROCMS_ENDPOINT!;
 const apiKey = process.env.MICROCMS_API_KEY!;
 
+// microCMSに同じURLが既に存在するかチェック
+async function isDuplicate(url: string): Promise<boolean> {
+  const searchUrl = `${endpoint}?filters=url[equals]${encodeURIComponent(url)}`;
+  const res = await fetch(searchUrl, {
+    headers: {
+      'X-API-KEY': apiKey,
+    },
+  });
+
+  if (!res.ok) {
+    console.error('重複チェック失敗:', await res.text());
+    return false; // 念のため処理継続
+  }
+
+  const data = await res.json();
+  return data.totalCount > 0;
+}
+
 export async function postToMicrocms(item: RssItem) {
-  // const data = {
-  //   title: item.title,
-  //   body: item.contentSnippet || '',
-  //   url: item.link,
-  //   publishedAt: item.pubDate || new Date().toISOString(),
-  // };
-  // console.log('microCMSに送信するデータ:', data);
+  const duplicate = await isDuplicate(item.link);
+  if (duplicate) {
+    console.log('既に投稿済み（スキップ）:', item.link);
+    return;
+  }
+
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -23,6 +39,7 @@ export async function postToMicrocms(item: RssItem) {
       body: item.contentSnippet || '',
       url: item.link,
       publishedAt: item.pubDate || new Date().toISOString(),
+      source: item.service,
     }),
   });
 
